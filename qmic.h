@@ -40,9 +40,9 @@ enum {
 };
 
 enum message_type {
-	MESSAGE_REQUEST,
-	MESSAGE_RESPONSE,
-	MESSAGE_INDICATION,
+	MESSAGE_REQUEST = 0,
+	MESSAGE_RESPONSE = 2,
+	MESSAGE_INDICATION = 4,
 };
 
 struct token {

@@ -83,10 +83,15 @@ void symbol_add(const char *name, int token, ...)
 	sym->name = name;
 	sym->next = NULL;
 
-	if (token == TOK_TYPE) {
+	switch (token) {
+	case TOK_MESSAGE:
+		sym->type = va_arg(ap, int);
+		break;
+	case TOK_TYPE:
 		sym->type = va_arg(ap, int);
 		if (sym->type == TYPE_STRUCT)
 			sym->qmi_struct = va_arg(ap, struct qmi_struct *);
+		break;
 	}
 
 	LIST_ADD(symbols, sym);
@@ -303,7 +308,10 @@ int main(int argc, char **argv)
 
 	symbol_add("const", TOK_CONST);
 	symbol_add("optional", TOK_OPTIONAL);
-	symbol_add("message", TOK_MESSAGE);
+	symbol_add("message", TOK_MESSAGE, MESSAGE_RESPONSE); /* backward compatible with early hacking */
+	symbol_add("request", TOK_MESSAGE, MESSAGE_REQUEST);
+	symbol_add("response", TOK_MESSAGE, MESSAGE_RESPONSE);
+	symbol_add("indication", TOK_MESSAGE, MESSAGE_INDICATION);
 	symbol_add("package", TOK_PACKAGE);
 	symbol_add("required", TOK_REQUIRED);
 	symbol_add("struct", TOK_STRUCT);
@@ -350,8 +358,8 @@ int main(int argc, char **argv)
 		     "#include <stdlib.h>\n\n");
 	fprintf(hfp, "struct qmi_tlv;\n"
 		     "\n"
-		     "struct qmi_tlv *qmi_tlv_init(unsigned txn, unsigned msg_id);\n"
-		     "struct qmi_tlv *qmi_tlv_decode(void *buf, size_t len, unsigned *txn);\n"
+		     "struct qmi_tlv *qmi_tlv_init(unsigned txn, unsigned msg_id, unsigned type);\n"
+		     "struct qmi_tlv *qmi_tlv_decode(void *buf, size_t len, unsigned *txn, unsigned type);\n"
 		     "void *qmi_tlv_encode(struct qmi_tlv *tlv, size_t *len);\n"
 		     "void qmi_tlv_free(struct qmi_tlv *tlv);\n"
 		     "\n"

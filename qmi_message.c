@@ -138,15 +138,15 @@ static void qmi_message_emit_message(FILE *fp,
 {
 	fprintf(fp, "struct %1$s_%2$s *%1$s_%2$s_alloc(unsigned txn)\n"
 		    "{\n"
-		    "	return (struct %1$s_%2$s*)qmi_tlv_init(txn, %3$d);\n"
+		    "	return (struct %1$s_%2$s*)qmi_tlv_init(txn, %3$d, %4$d);\n"
 		    "}\n\n",
-		    package, qm->name, qm->msg_id);
+		    package, qm->name, qm->msg_id, qm->type);
 
 	fprintf(fp, "struct %1$s_%2$s *%1$s_%2$s_parse(void *buf, size_t len, unsigned *txn)\n"
 		    "{\n"
-		    "	return (struct %1$s_%2$s*)qmi_tlv_decode(buf, len, txn);\n"
+		    "	return (struct %1$s_%2$s*)qmi_tlv_decode(buf, len, txn, %3$d);\n"
 		    "}\n\n",
-		    package, qm->name);
+		    package, qm->name, qm->type);
 
 	fprintf(fp, "void *%1$s_%2$s_encode(struct %1$s_%2$s *%2$s, size_t *len)\n"
 		    "{\n"
