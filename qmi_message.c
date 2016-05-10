@@ -270,7 +270,7 @@ static void qmi_message_emit_string_accessors(FILE *fp,
 		    "	size_t len;\n"
 		    "	char *ptr;\n"
 		    "\n"
-		    "	ptr = qmi_tlv_get((struct qmi_tlv*)open_req, %4$d, &len);\n"
+		    "	ptr = qmi_tlv_get((struct qmi_tlv*)%2$s, %4$d, &len);\n"
 		    "	if (!ptr)\n"
 		    "		return -ENOENT;\n"
 		    "\n"
