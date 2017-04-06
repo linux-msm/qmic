@@ -1,8 +1,8 @@
 OUT := qmic
 
-CFLAGS := -Wall -g -O2
-LDFLAGS :=
-prefix := /usr/local
+CFLAGS ?= -Wall -g -O2
+LDFLAGS ?=
+prefix ?= /usr/local
 
 SRCS := accessor.c kernel.c parser.c qmic.c
 OBJS := $(SRCS:.c=.o)
