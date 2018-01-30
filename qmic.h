@@ -52,7 +52,7 @@ struct token {
 	struct qmi_struct *qmi_struct;
 };
 
-void yyerror(const char *fmt, ...);
+void yyerror(const char *fmt, ...) __attribute__((noreturn));
 
 void symbol_add(const char *name, int token, ...);
 
