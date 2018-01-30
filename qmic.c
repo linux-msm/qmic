@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "list.h"
 #include "qmic.h"
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
@@ -66,10 +67,10 @@ struct symbol {
 	int type;
 	struct qmi_struct *qmi_struct;
 
-	struct symbol *next;
+	struct list_head node;
 };
 
-LIST_HEAD(symbol, symbols);
+static struct list_head symbols = LIST_INIT(symbols);
 
 void symbol_add(const char *name, int token, ...)
 {
@@ -81,7 +82,6 @@ void symbol_add(const char *name, int token, ...)
 	sym = malloc(sizeof(struct symbol));
 	sym->token = token;
 	sym->name = name;
-	sym->next = NULL;
 
 	switch (token) {
 	case TOK_MESSAGE:
@@ -94,7 +94,7 @@ void symbol_add(const char *name, int token, ...)
 		break;
 	}
 
-	LIST_ADD(symbols, sym);
+	list_add(&symbols, &sym->node);
 
 	va_end(ap);
 }
@@ -108,6 +108,8 @@ static struct token yylex()
 	int base;
 	int ch;
 
+	list_for_each_entry(sym, &symbols, node);
+
 	while ((ch = input()) && isspace(ch))
 		;
 
@@ -120,17 +122,16 @@ static struct token yylex()
 		*p = '\0';
 
 		token.str = strdup(buf);
-		for (sym = symbols.head; sym; sym = sym->next) {
+		list_for_each_entry(sym, &symbols, node) {
 			if (strcmp(buf, sym->name) == 0) {
 				token.id = sym->token;
 				token.num = sym->type;
 				token.qmi_struct = sym->qmi_struct;
-				break;
+				return token;
 			}
 		}
 
-		if (!sym)
-			token.id = TOK_ID;
+		token.id = TOK_ID;
 
 		return token;
 	} else if (isdigit(ch)) {
@@ -235,10 +236,10 @@ struct qmi_const {
 	const char *name;
 	unsigned value;
 
-	struct qmi_const *next;
+	struct list_head node;
 };
 
-LIST_HEAD(qmi_const, qmi_consts);
+static struct list_head qmi_consts = LIST_INIT(qmi_consts);
 
 static void qmi_const_parse()
 {
@@ -254,17 +255,18 @@ static void qmi_const_parse()
 	qc = malloc(sizeof(struct qmi_const));
 	qc->name = id_tok.str;
 	qc->value = num_tok.num;
-	LIST_ADD(qmi_consts, qc);
+
+	list_add(&qmi_consts, &qc->node);
 }
 
 static void qmi_const_header(FILE *fp)
 {
 	struct qmi_const *qc;
 
-	if (!qmi_consts.head)
+	if (list_empty(&qmi_consts))
 		return;
 
-	for (qc = qmi_consts.head; qc; qc = qc->next)
+	list_for_each_entry(qc, &qmi_consts, node)
 		fprintf(fp, "#define %s %d\n", qc->name, qc->value);
 
 	fprintf(fp, "\n");

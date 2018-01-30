@@ -3,21 +3,6 @@
 
 #include <stdbool.h>
 
-#define LIST_HEAD(type, name) \
-struct { \
-	struct type *head; \
-	struct type *tail; \
-} name;
-
-#define LIST_ADD(list, elem) \
-	if (list.tail) { \
-		list.tail->next = elem; \
-		list.tail = elem; \
-	} else { \
-		list.tail = elem; \
-		list.head = elem; \
-	}
-
 enum {
 	TOK_CONST = 256,
 	TOK_ID,

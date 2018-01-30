@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+
+#include "list.h"
 #include "qmic.h"
 
 static const char *sz_simple_types[] = {
@@ -19,7 +21,7 @@ struct qmi_message_member {
 	bool required;
 	unsigned array;
 
-	struct qmi_message_member *next;
+	struct list_head node;
 };
 
 struct qmi_message {
@@ -27,12 +29,12 @@ struct qmi_message {
 	const char *name;
 	unsigned msg_id;
 
-	struct qmi_message *next;
+	struct list_head node;
 
-	LIST_HEAD(qmi_message_member, members);
+	struct list_head members;
 };
 
-LIST_HEAD(qmi_message, qmi_messages);
+static struct list_head qmi_messages = LIST_INIT(qmi_messages);
 
 void qmi_message_parse(enum message_type message_type)
 {
@@ -51,6 +53,7 @@ void qmi_message_parse(enum message_type message_type)
 	qm = malloc(sizeof(struct qmi_message));
 	qm->name = msg_id_tok.str;
 	qm->type = message_type;
+	list_init(&qm->members);
 
 	while (!token_accept('}', NULL)) {
 		array = 0;
@@ -89,7 +92,7 @@ void qmi_message_parse(enum message_type message_type)
 		qmm->required = required;
 		qmm->array = array;
 
-		LIST_ADD(qm->members, qmm);
+		list_add(&qm->members, &qmm->node);
 	}
 
 	if (token_accept('=', NULL)) {
@@ -100,7 +103,7 @@ void qmi_message_parse(enum message_type message_type)
 
 	token_expect(';', NULL);
 
-	LIST_ADD(qmi_messages, qm);
+	list_add(&qmi_messages, &qm->node);
 }
 
 static void qmi_message_emit_message_type(FILE *fp,
@@ -290,10 +293,10 @@ void qmi_message_source(FILE *fp, const char *package)
 	struct qmi_message_member *qmm;
 	struct qmi_message *qm;
 
-	for (qm = qmi_messages.head; qm; qm = qm->next) {
+	list_for_each_entry(qm, &qmi_messages, node) {
 		qmi_message_emit_message(fp, package, qm);
 
-		for (qmm = qm->members.head; qmm; qmm = qmm->next)
+		list_for_each_entry(qmm, &qm->members, node) {
 			switch (qmm->type) {
 			case TYPE_U8:
 			case TYPE_U16:
@@ -308,6 +311,7 @@ void qmi_message_source(FILE *fp, const char *package)
 				qmi_struct_emit_accessors(fp, package, qm->name, qmm->name, qmm->id, qmm->array, qmm->qmi_struct);
 				break;
 			};
+		}
 	}
 }
 
@@ -316,15 +320,15 @@ void qmi_message_header(FILE *fp, const char *package)
 	struct qmi_message_member *qmm;
 	struct qmi_message *qm;
 
-	for (qm = qmi_messages.head; qm; qm = qm->next)
+	list_for_each_entry(qm, &qmi_messages, node)
 		qmi_message_emit_message_type(fp, package, qm->name);
 
 	fprintf(fp, "\n");
 
-	for (qm = qmi_messages.head; qm; qm = qm->next) {
+	list_for_each_entry(qm, &qmi_messages, node) {
 		qmi_message_emit_message_prototype(fp, package, qm->name);
 
-		for (qmm = qm->members.head; qmm; qmm = qmm->next) {
+		list_for_each_entry(qmm, &qm->members, node) {
 			switch (qmm->type) {
 			case TYPE_U8:
 			case TYPE_U16:

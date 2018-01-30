@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "list.h"
 #include "qmic.h"
 
 static const char *sz_simple_types[] = {
@@ -14,18 +16,18 @@ struct qmi_struct_member {
 	const char *name;
 	int type;
 
-	struct qmi_struct_member *next;
+	struct list_head node;
 };
 
 struct qmi_struct {
 	const char *name;
 
-	struct qmi_struct *next;
+	struct list_head node;
 
-	LIST_HEAD(qmi_struct_member, members);
+	struct list_head members;
 };
 
-LIST_HEAD(qmi_struct, qmi_structs);
+static struct list_head qmi_structs = LIST_INIT(qmi_structs);
 
 void qmi_struct_parse(void)
 {
@@ -40,6 +42,7 @@ void qmi_struct_parse(void)
 
 	qs = malloc(sizeof(struct qmi_struct));
 	qs->name = struct_id_tok.str;
+	list_init(&qs->members);
 
 	while (token_accept(TOK_TYPE, &type_tok)) {
 		token_expect(TOK_ID, &id_tok);
@@ -49,13 +52,13 @@ void qmi_struct_parse(void)
 		qsm->name = id_tok.str;
 		qsm->type = type_tok.num;
 
-		LIST_ADD(qs->members, qsm);
+		list_add(&qs->members, &qsm->node);
 	}
 
 	token_expect('}', NULL);
 	token_expect(';', NULL);
 
-	LIST_ADD(qmi_structs, qs);
+	list_add(&qmi_structs, &qs->node);
 
 	symbol_add(qs->name, TOK_TYPE, TYPE_STRUCT, qs);
 }
@@ -65,10 +68,10 @@ void qmi_struct_header(FILE *fp, const char *package)
 	struct qmi_struct_member *qsm;
 	struct qmi_struct *qs;
 
-	for (qs = qmi_structs.head; qs; qs = qs->next) {
+	list_for_each_entry(qs, &qmi_structs, node) {
 		fprintf(fp, "struct %s_%s {\n",
 			    package, qs->name);
-		for (qsm = qs->members.head; qsm; qsm = qsm->next) {
+		list_for_each_entry(qsm, &qs->members, node) {
 			fprintf(fp, "\t%s %s;\n",
 				    sz_simple_types[qsm->type], qsm->name);
 		}
