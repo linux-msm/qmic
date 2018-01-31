@@ -12,7 +12,30 @@
 #include "list.h"
 #include "qmic.h"
 
-#define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
+const char *qmi_package;
+
+struct list_head qmi_consts = LIST_INIT(qmi_consts);
+struct list_head qmi_messages = LIST_INIT(qmi_messages);
+struct list_head qmi_structs = LIST_INIT(qmi_structs);
+
+enum {
+	TOK_CONST = 256,
+	TOK_ID,
+	TOK_MESSAGE,
+	TOK_NUM,
+	TOK_PACKAGE,
+	TOK_STRUCT,
+	TOK_TYPE,
+	TOK_REQUIRED,
+	TOK_OPTIONAL,
+};
+
+struct token {
+	int id;
+	const char *str;
+	unsigned num;
+	struct qmi_struct *qmi_struct;
+};
 
 static char scratch_buf[128];
 static int scratch_pos;
@@ -72,7 +95,7 @@ struct symbol {
 
 static struct list_head symbols = LIST_INIT(symbols);
 
-void symbol_add(const char *name, int token, ...)
+static void symbol_add(const char *name, int token, ...)
 {
 	struct symbol *sym;
 	va_list ap;
@@ -160,7 +183,7 @@ static struct token yylex()
 
 static struct token curr_token;
 
-void yyerror(const char *fmt, ...)
+static void yyerror(const char *fmt, ...)
 {
 	char buf[128];
 	va_list ap;
@@ -179,7 +202,7 @@ static void token_init(void)
 	curr_token = yylex();
 }
 
-int token_accept(int id, struct token *tok)
+static int token_accept(int id, struct token *tok)
 {
 	if (curr_token.id == id) {
 		if (tok)
@@ -192,7 +215,7 @@ int token_accept(int id, struct token *tok)
 	}
 }
 
-void token_expect(int id, struct token *tok)
+static void token_expect(int id, struct token *tok)
 {
 	if (!token_accept(id, tok)) {
 		switch (id) {
@@ -231,8 +254,6 @@ static const char *parse_package()
 	return tok.str;
 }
 
-struct list_head qmi_consts = LIST_INIT(qmi_consts);
-
 static void qmi_const_parse()
 {
 	struct qmi_const *qc;
@@ -251,9 +272,7 @@ static void qmi_const_parse()
 	list_add(&qmi_consts, &qc->node);
 }
 
-struct list_head qmi_messages = LIST_INIT(qmi_messages);
-
-void qmi_message_parse(enum message_type message_type)
+static void qmi_message_parse(enum message_type message_type)
 {
 	struct qmi_message_member *qmm;
 	struct qmi_message *qm;
@@ -323,9 +342,7 @@ void qmi_message_parse(enum message_type message_type)
 	list_add(&qmi_messages, &qm->node);
 }
 
-struct list_head qmi_structs = LIST_INIT(qmi_structs);
-
-void qmi_struct_parse(void)
+static void qmi_struct_parse(void)
 {
 	struct qmi_struct_member *qsm;
 	struct token struct_id_tok;
@@ -358,8 +375,6 @@ void qmi_struct_parse(void)
 
 	symbol_add(qs->name, TOK_TYPE, TYPE_STRUCT, qs);
 }
-
-const char *qmi_package;
 
 void qmi_parse(void)
 {

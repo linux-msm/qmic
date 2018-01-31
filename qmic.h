@@ -3,17 +3,7 @@
 
 #include <stdbool.h>
 
-enum {
-	TOK_CONST = 256,
-	TOK_ID,
-	TOK_MESSAGE,
-	TOK_NUM,
-	TOK_PACKAGE,
-	TOK_STRUCT,
-	TOK_TYPE,
-	TOK_REQUIRED,
-	TOK_OPTIONAL,
-};
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
 
 enum {
 	TYPE_U8,
@@ -28,13 +18,6 @@ enum message_type {
 	MESSAGE_REQUEST = 0,
 	MESSAGE_RESPONSE = 2,
 	MESSAGE_INDICATION = 4,
-};
-
-struct token {
-	int id;
-	const char *str;
-	unsigned num;
-	struct qmi_struct *qmi_struct;
 };
 
 extern const char *sz_simple_types[];
@@ -88,23 +71,13 @@ extern struct list_head qmi_consts;
 extern struct list_head qmi_messages;
 extern struct list_head qmi_structs;
 
-void yyerror(const char *fmt, ...) __attribute__((noreturn));
-
-void symbol_add(const char *name, int token, ...);
-
-int token_accept(int id, struct token *tok);
-void token_expect(int id, struct token *tok);
-
-void qmi_message_parse(enum message_type message_type);
 void qmi_message_source(FILE *fp, const char *package);
 void qmi_message_header(FILE *fp, const char *package);
 
-void qmi_struct_parse(void);
 void qmi_struct_header(FILE *fp, const char *package);
 void qmi_struct_emit_prototype(FILE *fp, const char *package, const char *message, const char *member, unsigned array_size, struct qmi_struct *qs);
 void qmi_struct_emit_accessors(FILE *fp, const char *package, const char *message, const char *member, int member_id, unsigned array_size, struct qmi_struct *qs);
 
 void qmi_parse(void);
-
 
 #endif
