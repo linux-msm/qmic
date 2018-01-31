@@ -39,6 +39,40 @@ struct token {
 
 extern const char *sz_simple_types[];
 
+extern const char *qmi_package;
+
+struct qmi_const {
+	const char *name;
+	unsigned value;
+
+	struct list_head node;
+};
+
+struct qmi_message_member {
+	const char *name;
+	int type;
+	struct qmi_struct *qmi_struct;
+	int id;
+	bool required;
+	unsigned array;
+
+	struct list_head node;
+};
+
+struct qmi_message {
+	enum message_type type;
+	const char *name;
+	unsigned msg_id;
+
+	struct list_head node;
+
+	struct list_head members;
+};
+
+extern struct list_head qmi_consts;
+extern struct list_head qmi_messages;
+
+
 void yyerror(const char *fmt, ...) __attribute__((noreturn));
 
 void symbol_add(const char *name, int token, ...);
@@ -54,5 +88,8 @@ void qmi_struct_parse(void);
 void qmi_struct_header(FILE *fp, const char *package);
 void qmi_struct_emit_prototype(FILE *fp, const char *package, const char *message, const char *member, unsigned array_size, struct qmi_struct *qs);
 void qmi_struct_emit_accessors(FILE *fp, const char *package, const char *message, const char *member, int member_id, unsigned array_size, struct qmi_struct *qs);
+
+void qmi_parse(void);
+
 
 #endif

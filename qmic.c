@@ -10,7 +10,6 @@
 #include <unistd.h>
 
 #include "list.h"
-#include "parser.h"
 #include "qmic.h"
 
 const char *sz_simple_types[] = {
