@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#include "list.h"
+
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
 
 enum {
@@ -71,13 +73,14 @@ extern struct list_head qmi_consts;
 extern struct list_head qmi_messages;
 extern struct list_head qmi_structs;
 
-void qmi_message_source(FILE *fp, const char *package);
-void qmi_message_header(FILE *fp, const char *package);
-
-void qmi_struct_header(FILE *fp, const char *package);
-void qmi_struct_emit_prototype(FILE *fp, const char *package, const char *message, const char *member, unsigned array_size, struct qmi_struct *qs);
-void qmi_struct_emit_accessors(FILE *fp, const char *package, const char *message, const char *member, int member_id, unsigned array_size, struct qmi_struct *qs);
-
 void qmi_parse(void);
+
+void emit_source_includes(FILE *fp, const char *package);
+void guard_header(FILE *fp, const char *package);
+void guard_footer(FILE *fp);
+void qmi_const_header(FILE *fp);
+
+void accessor_emit_c(FILE *fp, const char *package);
+void accessor_emit_h(FILE *fp, const char *package);
 
 #endif
