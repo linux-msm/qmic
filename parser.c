@@ -280,20 +280,19 @@ static void qmi_message_parse(enum message_type message_type)
 	struct token type_tok;
 	struct token num_tok;
 	struct token id_tok;
-	unsigned array;
+	unsigned int array_size;
+	bool array_fixed = false;
 	bool required;
 
 	token_expect(TOK_ID, &msg_id_tok);
 	token_expect('{', NULL);
 
-	qm = malloc(sizeof(struct qmi_message));
+	qm = calloc(1, sizeof(struct qmi_message));
 	qm->name = msg_id_tok.str;
 	qm->type = message_type;
 	list_init(&qm->members);
 
 	while (!token_accept('}', NULL)) {
-		array = 0;
-
 		if (token_accept(TOK_REQUIRED, NULL))
 			required = true;
 		else if (token_accept(TOK_OPTIONAL, NULL))
@@ -305,28 +304,31 @@ static void qmi_message_parse(enum message_type message_type)
 		token_expect(TOK_ID, &id_tok);
 
 		if (token_accept('[', NULL)) {
-			array = 1;
-			if (token_accept(TOK_NUM, &num_tok)) {
-				if (num_tok.num & 0xffff0000)
-					array = 4;
-				else if (num_tok.num & 0xff00)
-					array = 2;
-			}
-
+			token_expect(TOK_NUM, &num_tok);
+			array_size = num_tok.num;
 			token_expect(']', NULL);
+
+			array_fixed = true;
+		} else if(token_accept('(', NULL)) {
+			token_expect(TOK_NUM, &num_tok);
+			array_size = num_tok.num;
+			token_expect(')', NULL);
+		} else {
+			array_size = 0;
 		}
 
 		token_expect('=', NULL);
 		token_expect(TOK_NUM, &num_tok);
 		token_expect(';', NULL);
 
-		qmm = malloc(sizeof(struct qmi_message_member));
+		qmm = calloc(1, sizeof(struct qmi_message_member));
 		qmm->name = id_tok.str;
 		qmm->type = type_tok.num;
 		qmm->qmi_struct = type_tok.qmi_struct;
 		qmm->id = num_tok.num;
 		qmm->required = required;
-		qmm->array = array;
+		qmm->array_size = array_size;
+		qmm->array_fixed = array_fixed;
 
 		list_add(&qm->members, &qmm->node);
 	}

@@ -39,7 +39,8 @@ struct qmi_message_member {
 	struct qmi_struct *qmi_struct;
 	int id;
 	bool required;
-	unsigned array;
+	unsigned array_size;
+	bool array_fixed;
 
 	struct list_head node;
 };
@@ -82,5 +83,8 @@ void qmi_const_header(FILE *fp);
 
 void accessor_emit_c(FILE *fp, const char *package);
 void accessor_emit_h(FILE *fp, const char *package);
+
+void kernel_emit_c(FILE *fp, const char *package);
+void kernel_emit_h(FILE *fp, const char *package);
 
 #endif

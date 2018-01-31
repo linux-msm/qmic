@@ -66,7 +66,7 @@ static void usage(void)
 {
 	extern const char *__progname;
 
-	fprintf(stderr, "Usage: %s -a\n", __progname);
+	fprintf(stderr, "Usage: %s [-ak]\n", __progname);
 	exit(1);
 }
 
@@ -78,18 +78,18 @@ int main(int argc, char **argv)
 	int method = 0;
 	int opt;
 
-	while ((opt = getopt(argc, argv, "a")) != -1) {
+	while ((opt = getopt(argc, argv, "ak")) != -1) {
 		switch (opt) {
 		case 'a':
+			method = 0;
+			break;
+		case 'k':
 			method = 1;
 			break;
 		default:
 			usage();
 		}
 	}
-
-	if (!method)
-		usage();
 
 	qmi_parse();
 
@@ -103,8 +103,16 @@ int main(int argc, char **argv)
 	if (!hfp)
 		err(1, "failed to open %s", fname);
 
-	accessor_emit_c(sfp, qmi_package);
-	accessor_emit_h(hfp, qmi_package);
+	switch (method) {
+	case 0:
+		accessor_emit_c(sfp, qmi_package);
+		accessor_emit_h(hfp, qmi_package);
+		break;
+	case 1:
+		kernel_emit_c(sfp, qmi_package);
+		kernel_emit_h(hfp, qmi_package);
+		break;
+	}
 
 	fclose(hfp);
 	fclose(sfp);

@@ -4,7 +4,7 @@ CFLAGS := -Wall -g -O2
 LDFLAGS :=
 prefix := /usr/local
 
-SRCS := accessor.c parser.c qmic.c
+SRCS := accessor.c kernel.c parser.c qmic.c
 OBJS := $(SRCS:.c=.o)
 
 $(OUT): $(OBJS)
