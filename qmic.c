@@ -13,6 +13,14 @@
 #include "parser.h"
 #include "qmic.h"
 
+const char *sz_simple_types[] = {
+	[TYPE_U8] = "uint8_t",
+	[TYPE_U16] = "uint16_t",
+	[TYPE_U32] = "uint32_t",
+	[TYPE_U64] = "uint64_t",
+	[TYPE_STRING] = "char *",
+};
+
 static void qmi_const_header(FILE *fp)
 {
 	struct qmi_const *qc;

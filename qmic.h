@@ -37,6 +37,8 @@ struct token {
 	struct qmi_struct *qmi_struct;
 };
 
+extern const char *sz_simple_types[];
+
 void yyerror(const char *fmt, ...) __attribute__((noreturn));
 
 void symbol_add(const char *name, int token, ...);

@@ -4,14 +4,6 @@
 #include "list.h"
 #include "qmic.h"
 
-static const char *sz_simple_types[] = {
-	[TYPE_U8] = "uint8_t",
-	[TYPE_U16] = "uint16_t",
-	[TYPE_U32] = "uint32_t",
-	[TYPE_U64] = "uint64_t",
-	[TYPE_STRING] = "char *",
-};
-
 struct qmi_struct_member {
 	const char *name;
 	int type;
