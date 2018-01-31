@@ -4,57 +4,6 @@
 #include "list.h"
 #include "qmic.h"
 
-struct qmi_struct_member {
-	const char *name;
-	int type;
-
-	struct list_head node;
-};
-
-struct qmi_struct {
-	const char *name;
-
-	struct list_head node;
-
-	struct list_head members;
-};
-
-static struct list_head qmi_structs = LIST_INIT(qmi_structs);
-
-void qmi_struct_parse(void)
-{
-	struct qmi_struct_member *qsm;
-	struct token struct_id_tok;
-	struct qmi_struct *qs;
-	struct token type_tok;
-	struct token id_tok;
-
-	token_expect(TOK_ID, &struct_id_tok);
-	token_expect('{', NULL);
-
-	qs = malloc(sizeof(struct qmi_struct));
-	qs->name = struct_id_tok.str;
-	list_init(&qs->members);
-
-	while (token_accept(TOK_TYPE, &type_tok)) {
-		token_expect(TOK_ID, &id_tok);
-		token_expect(';', NULL);
-
-		qsm = malloc(sizeof(struct qmi_struct_member));
-		qsm->name = id_tok.str;
-		qsm->type = type_tok.num;
-
-		list_add(&qs->members, &qsm->node);
-	}
-
-	token_expect('}', NULL);
-	token_expect(';', NULL);
-
-	list_add(&qmi_structs, &qs->node);
-
-	symbol_add(qs->name, TOK_TYPE, TYPE_STRUCT, qs);
-}
-
 void qmi_struct_header(FILE *fp, const char *package)
 {
 	struct qmi_struct_member *qsm;

@@ -69,9 +69,24 @@ struct qmi_message {
 	struct list_head members;
 };
 
+struct qmi_struct_member {
+	const char *name;
+	int type;
+
+	struct list_head node;
+};
+
+struct qmi_struct {
+	const char *name;
+
+	struct list_head node;
+
+	struct list_head members;
+};
+
 extern struct list_head qmi_consts;
 extern struct list_head qmi_messages;
-
+extern struct list_head qmi_structs;
 
 void yyerror(const char *fmt, ...) __attribute__((noreturn));
 
