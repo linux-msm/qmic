@@ -156,7 +156,18 @@ static void emit_native_ei(FILE *fp, const char *package, struct qmi_message *qm
 				package, qm->name, qmm->name, qmm->id);
 	}
 
-	if (qmm->array_size) {
+	if (qmm->array_fixed) {
+		fprintf(fp, "\t{\n"
+				"\t\t.data_type = QMI_UNSIGNED_1_BYTE,\n"
+				"\t\t.elem_len = %5$d,\n"
+				"\t\t.elem_size = sizeof(%6$s),\n"
+				"\t\t.array_type = STATIC_ARRAY,\n"
+				"\t\t.tlv_type = %4$d,\n"
+				"\t\t.offset = offsetof(struct %1$s_%2$s, %3$s),\n"
+				"\t},\n",
+				package, qm->name, qmm->name, qmm->id, qmm->array_size,
+				sz_native_types[qmm->type]);
+	} else if (qmm->array_size) {
 		fprintf(fp, "\t{\n"
 				"\t\t.data_type = QMI_DATA_LEN,\n"
 				"\t\t.elem_len = 1,\n"
