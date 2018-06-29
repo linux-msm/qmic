@@ -32,6 +32,10 @@ static void emit_struct_definition(FILE *fp, const char *package,
 		case TYPE_U64:
 			fprintf(fp, "\t%s %s;\n", sz_native_types[qsm->type], qsm->name);
 			break;
+		case TYPE_STRING:
+			fprintf(fp, "\tuint32_t %s_len;\n", qsm->name);
+			fprintf(fp, "\tchar %s[256];\n", qsm->name);
+			break;
 		}
 	}
 
@@ -66,6 +70,15 @@ static void emit_struct_ei(FILE *fp, const char *package, struct qmi_struct *qs)
 		case TYPE_U32:
 		case TYPE_U64:
 			emit_struct_native_ei(fp, package, qs, qsm);
+			break;
+		case TYPE_STRING:
+			fprintf(fp, "\t{\n"
+				    "\t\t.data_type = QMI_STRING,\n"
+				    "\t\t.elem_len = 256,\n"
+				    "\t\t.elem_size = sizeof(char),\n"
+				    "\t\t.offset = offsetof(struct %1$s_%2$s, %3$s)\n"
+				    "\t},\n",
+				package, qs->name, qsm->name);
 			break;
 		}
 	}
