@@ -419,6 +419,7 @@ void qmi_parse(void)
 			qmi_struct_parse();
 		} else if (token_accept(TOK_MESSAGE, &tok)) {
 			qmi_message_parse(tok.num);
+			free(tok.str);
 		} else {
 			yyerror("unexpected symbol");
 			break;
