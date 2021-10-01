@@ -315,13 +315,16 @@ static void token_expect(enum token_id token_id, struct token *tok)
 	}
 }
 
-static const char *parse_package()
+static void qmi_package_parse(void)
 {
 	struct token tok;
 
 	token_expect(TOK_ID, &tok);
 	token_expect(';', NULL);
-	return tok.str;
+
+	if (qmi_package)
+		yyerror("package may only be specified once");
+	qmi_package = tok.str;
 }
 
 static void qmi_const_parse()
@@ -482,7 +485,7 @@ void qmi_parse(void)
 	token_init();
 	while (!token_accept(TOK_EOF, NULL)) {
 		if (token_accept(TOK_PACKAGE, NULL)) {
-			qmi_package = parse_package();
+			qmi_package_parse();
 		} else if (token_accept(TOK_CONST, NULL)) {
 			qmi_const_parse();
 		} else if (token_accept(TOK_STRUCT, NULL)) {
@@ -495,4 +498,8 @@ void qmi_parse(void)
 			break;
 		}
 	}
+
+	/* The package name must have been specified */
+	if (!qmi_package)
+		yyerror("package not specified");
 }
