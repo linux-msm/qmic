@@ -14,6 +14,17 @@
 #include "list.h"
 #include "qmic.h"
 
+/* Allocate and zero a block of memory; and exit if it fails */
+#define memalloc(size) ({						\
+		void *__p = malloc(size);				\
+									\
+		if (!__p)						\
+			errx(1, "malloc() failed in %s(), line %d\n",	\
+				__func__, __LINE__);			\
+		memset(__p, 0, size);					\
+		__p;							\
+	 })
+
 const char *qmi_package;
 
 struct list_head qmi_consts = LIST_INIT(qmi_consts);
@@ -103,7 +114,7 @@ static void symbol_add(const char *name, int token, ...)
 
 	va_start(ap, token);
 
-	sym = malloc(sizeof(struct symbol));
+	sym = memalloc(sizeof(struct symbol));
 	sym->token = token;
 	sym->name = name;
 
@@ -144,6 +155,9 @@ static struct token yylex()
 		*p = '\0';
 
 		token.str = strdup(buf);
+		if (!token.str)
+			yyerror("strdup failed in %s(), line %d\n",
+				__func__, __LINE__);
 		list_for_each_entry(sym, &symbols, node) {
 			if (strcmp(buf, sym->name) == 0) {
 				token.id = sym->token;
@@ -254,7 +268,7 @@ static void qmi_const_parse()
 	token_expect(TOK_NUM, &num_tok);
 	token_expect(';', NULL);
 
-	qc = malloc(sizeof(struct qmi_const));
+	qc = memalloc(sizeof(struct qmi_const));
 	qc->name = id_tok.str;
 	qc->value = num_tok.num;
 
@@ -276,7 +290,7 @@ static void qmi_message_parse(enum message_type message_type)
 	token_expect(TOK_ID, &msg_id_tok);
 	token_expect('{', NULL);
 
-	qm = calloc(1, sizeof(struct qmi_message));
+	qm = memalloc(sizeof(struct qmi_message));
 	qm->name = msg_id_tok.str;
 	qm->type = message_type;
 	list_init(&qm->members);
@@ -310,7 +324,7 @@ static void qmi_message_parse(enum message_type message_type)
 		token_expect(TOK_NUM, &num_tok);
 		token_expect(';', NULL);
 
-		qmm = calloc(1, sizeof(struct qmi_message_member));
+		qmm = memalloc(sizeof(struct qmi_message_member));
 		qmm->name = id_tok.str;
 		qmm->type = type_tok.num;
 		if (type_tok.str)
@@ -346,7 +360,7 @@ static void qmi_struct_parse(void)
 	token_expect(TOK_ID, &struct_id_tok);
 	token_expect('{', NULL);
 
-	qs = malloc(sizeof(struct qmi_struct));
+	qs = memalloc(sizeof(struct qmi_struct));
 	qs->name = struct_id_tok.str;
 	list_init(&qs->members);
 
@@ -354,7 +368,7 @@ static void qmi_struct_parse(void)
 		token_expect(TOK_ID, &id_tok);
 		token_expect(';', NULL);
 
-		qsm = malloc(sizeof(struct qmi_struct_member));
+		qsm = memalloc(sizeof(struct qmi_struct_member));
 		qsm->name = id_tok.str;
 		qsm->type = type_tok.num;
 		if (type_tok.str)
