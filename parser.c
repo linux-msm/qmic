@@ -337,19 +337,20 @@ static void token_init(void)
 	curr_token = yylex();
 }
 
-static int token_accept(enum token_id token_id, struct token *tok)
+static bool token_accept(enum token_id token_id, struct token *tok)
 {
-	if (curr_token.id == token_id) {
-		if (tok)
-			*tok = curr_token;
-		else if (curr_token.str)
-			free(curr_token.str);
+	if (curr_token.id != token_id)
+		return false;
 
-		curr_token = yylex();
-		return 1;
-	} else {
-		return 0;
-	}
+	/* Be sure to free the token string if caller won't be doing it */
+	if (tok)
+		*tok = curr_token;
+	else if (curr_token.str)
+		free(curr_token.str);
+
+	curr_token = yylex();
+
+	return true;
 }
 
 static void token_expect(enum token_id token_id, struct token *tok)
