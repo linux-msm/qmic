@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <assert.h>
 #include <ctype.h>
 #include <err.h>
@@ -60,7 +62,8 @@ static void yyerror(const char *fmt, ...)
 
 	va_start(ap, fmt);
 
-	fprintf(stderr, "parse error on line %u:\n\t", yyline);
+	fprintf(stderr, "%s: parse error on line %u:\n\t",
+		program_invocation_short_name, yyline);
 	vfprintf(stderr, fmt, ap);
 	fprintf(stderr, "\n");
 
@@ -156,7 +159,7 @@ static struct token yylex()
 
 		token.str = strdup(buf);
 		if (!token.str)
-			yyerror("strdup failed in %s(), line %d\n",
+			yyerror("strdup() failed in %s(), line %d\n",
 				__func__, __LINE__);
 		list_for_each_entry(sym, &symbols, node) {
 			if (strcmp(buf, sym->name) == 0) {
