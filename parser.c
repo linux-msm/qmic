@@ -32,7 +32,7 @@ enum {
 
 struct token {
 	int id;
-	const char *str;
+	char *str;
 	unsigned num;
 	struct qmi_struct *qmi_struct;
 };
@@ -206,6 +206,8 @@ static int token_accept(int id, struct token *tok)
 	if (curr_token.id == id) {
 		if (tok)
 			*tok = curr_token;
+		else if (curr_token.str)
+			free(curr_token.str);
 
 		curr_token = yylex();
 		return 1;
