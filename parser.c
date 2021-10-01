@@ -50,7 +50,7 @@ enum token_id {
 struct token {
 	enum token_id id;
 	char *str;
-	unsigned num;
+	unsigned long long num;
 	struct qmi_struct *qmi_struct;
 };
 
@@ -169,6 +169,7 @@ static struct token yylex()
 {
 	struct symbol *sym;
 	struct token token = {};
+	unsigned long long num;
 	char buf[128];
 	char *p = buf;
 	int base;
@@ -227,8 +228,14 @@ static struct token yylex()
 		else
 			base = 10;
 
+		errno = 0;
+		num = strtoull(buf, NULL, base);
+		if (errno)
+			yyerror("number %s out of range", buf);
+
+		token.num = num;
 		token.id = TOK_NUM;
-		token.num = strtol(buf, NULL, base);
+
 		return token;
 	} else if (!ch) {
 		token.id = TOK_EOF;

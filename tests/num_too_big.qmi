@@ -1,0 +1,22 @@
+package test;
+
+# This value requires more than 32 bits to represent
+const TEST_NUMBER = 0x123456789;
+
+struct qmi_result {
+	u16 result;
+	u16 error;
+};
+
+request test_request {
+	required u8 test_number = 0x12;
+} = 0x100000000;
+
+response test_response {
+	required qmi_result r = 2;
+} = 040000000000;
+
+indication test_indication {
+	# This value requires more than 64 bits to represent
+	optional u64 value = 0x12345678987654321;
+} = 0x7;

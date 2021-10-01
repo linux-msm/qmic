@@ -28,7 +28,7 @@ void qmi_const_header(FILE *fp)
 		return;
 
 	list_for_each_entry(qc, &qmi_consts, node)
-		fprintf(fp, "#define %s %d\n", qc->name, qc->value);
+		fprintf(fp, "#define %s %llu\n", qc->name, qc->value);
 
 	fprintf(fp, "\n");
 }

@@ -28,7 +28,7 @@ extern const char *qmi_package;
 
 struct qmi_const {
 	const char *name;
-	unsigned value;
+	unsigned long long value;
 
 	struct list_head node;
 };

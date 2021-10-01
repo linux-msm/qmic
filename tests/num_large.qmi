@@ -1,0 +1,23 @@
+package test;
+
+# As a 32 bit signed number, this would be negative
+const TEST_NUMBER = 0x87654321;
+# This value requires more than 32 bits to represent
+const TEST_NUMBER = 0x123456789;
+
+struct qmi_result {
+	u16 result;
+	u16 error;
+};
+
+request test_request {
+	required u8 test_number = 0x12;
+} = 0x80000000;
+
+response test_response {
+	required qmi_result r = 2;
+} = 020000000000;
+
+indication test_indication {
+	optional u64 value = 0x99;
+} = 0x7;
