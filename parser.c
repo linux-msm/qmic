@@ -38,15 +38,15 @@ struct token {
 };
 
 static char scratch_buf[128];
-static int scratch_pos;
+static unsigned scratch_pos;
 
 static int yyline = 1;
 
 static int input()
 {
 	static char input_buf[128];
-	static int input_pos;
-	static int input_len;
+	static unsigned input_pos;
+	static unsigned input_len;
 	int ret;
 	int ch;
 
@@ -189,7 +189,7 @@ static void yyerror(const char *fmt, ...)
 	va_start(ap, fmt);
 
 	vsprintf(buf, fmt, ap);
-	printf("parse error on line %d: %s\n", yyline, buf);
+	printf("parse error on line %u: %s\n", yyline, buf);
 
 	va_end(ap);
 	exit(1);
