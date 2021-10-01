@@ -165,11 +165,18 @@ static bool skip(char ch)
 	return in_comment;
 }
 
+/* Used for parsing octal numbers */
+static int isodigit(int c)
+{
+	return isdigit(c) && c < '9';
+}
+
 static struct token yylex()
 {
 	struct symbol *sym;
 	struct token token = {};
 	unsigned long long num;
+	int (*isvalid)(int);
 	char buf[128];
 	char *p = buf;
 	int base;
@@ -214,19 +221,30 @@ static struct token yylex()
 
 		return token;
 	} else if (isdigit(ch)) {
+		/* Determine base and valid character set */
+		if (ch == '0') {
+			*p++ = ch;
+			ch = input();
+			if (ch == 'x' || ch == 'X') {
+				*p++ = ch;
+				ch = input();
+				isvalid = isxdigit;
+				base = 16;
+			} else {
+				isvalid = isodigit;
+				base = 8;
+			}
+		} else {
+			isvalid = isdigit;
+			base = 10;
+		}
+
 		do {
 			*p++ = ch;
 			ch = input();
-		} while (isxdigit(ch) || (p - buf == 1 && ch == 'x'));
+		} while (isvalid(ch));
 		unput(ch);
 		*p = '\0';
-
-		if (buf[0] == '0' && buf[1] == 'x')
-			base = 16;
-		else if (buf[0] == '0')
-			base = 8;
-		else
-			base = 10;
 
 		errno = 0;
 		num = strtoull(buf, NULL, base);

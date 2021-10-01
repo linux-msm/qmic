@@ -1,0 +1,19 @@
+package test;
+
+struct qmi_result {
+	u16 result;
+	u16 error;
+};
+
+request test_request {
+	# Note that '8' is not a valid octal digit
+	optional test_struct foo = 028;
+} = 0x23;
+
+response test_response {
+	required qmi_result r = 2;
+} = 043;
+
+indication test_indication {
+	optional u64 value = 0x99;
+} = 0x7;
