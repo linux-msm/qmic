@@ -183,15 +183,16 @@ static struct token curr_token;
 
 static void yyerror(const char *fmt, ...)
 {
-	char buf[128];
 	va_list ap;
 
 	va_start(ap, fmt);
 
-	vsprintf(buf, fmt, ap);
-	printf("parse error on line %u: %s\n", yyline, buf);
+	printf("parse error on line %u:\n\t", yyline);
+	vprintf(fmt, ap);
+	printf("\n");
 
 	va_end(ap);
+
 	exit(1);
 }
 
