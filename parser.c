@@ -205,10 +205,70 @@ static bool skip(char ch)
 	return in_comment;
 }
 
+/* Extract an identifier from input into the given buffer */
+static struct symbol *qmi_identifier_parse(char *buf, size_t size, char ch)
+{
+	char *p = buf;
+
+	/* First character is known to be alphabetic */
+	*p++ = ch;
+	while ((ch = input()) && (isalnum(ch) || ch == '_')) {
+		if (p - buf == size) {
+			buf[TOKEN_BUF_MIN] = '\0';
+			yyerror("token too long: \"%s...\"", buf);
+		}
+		*p++ = ch;
+	}
+	unput(ch);
+	*p = '\0';
+
+	return symbol_find(buf);
+}
+
 /* Used for parsing octal numbers */
 static int isodigit(int c)
 {
 	return isdigit(c) && c < '9';
+}
+
+/* Extract a number from input into the given buffer; return base */
+static unsigned qmi_number_parse(char *buf, size_t size, char ch)
+{
+	int (*isvalid)(int);
+	char *p = buf;
+	unsigned base;
+
+	/* First character is a digit; determine base and valid character set */
+	if (ch == '0') {
+		*p++ = ch;
+		ch = input();
+		if (ch == 'x' || ch == 'X') {
+			*p++ = ch;
+			ch = input();
+			isvalid = isxdigit;
+			base = 16;
+		} else {
+			isvalid = isodigit;
+			base = 8;
+		}
+	} else {
+		isvalid = isdigit;
+		base = 10;
+	}
+
+	/* First character is known to be a digit 0-9 */
+	*p++ = ch;
+	while ((ch = input()) && isvalid(ch)) {
+		if (p - buf == size) {
+			buf[TOKEN_BUF_MIN] = '\0';
+			yyerror("number too long: \"%s...\"", buf);
+		}
+		*p++ = ch;
+	}
+	unput(ch);
+	*p = '\0';
+
+	return base;
 }
 
 static struct token yylex()
@@ -216,9 +276,7 @@ static struct token yylex()
 	struct symbol *sym;
 	struct token token = {};
 	unsigned long long num;
-	int (*isvalid)(int);
 	char buf[TOKEN_BUF_SIZE];
-	char *p = buf;
 	int base;
 	char ch;
 
@@ -226,22 +284,12 @@ static struct token yylex()
 		;
 
 	if (isalpha(ch)) {
-		*p++ = ch;
-		while ((ch = input()) && (isalnum(ch) || ch == '_')) {
-			if (p - buf == sizeof(buf)) {
-				buf[TOKEN_BUF_MIN] = '\0';
-				yyerror("token too long: \"%s...\"", buf);
-			}
-			*p++ = ch;
-		}
-		unput(ch);
-		*p = '\0';
+		sym = qmi_identifier_parse(buf, sizeof(buf), ch);
 
 		token.str = strdup(buf);
 		if (!token.str)
 			yyerror("strdup() failed in %s(), line %d\n",
 				__func__, __LINE__);
-		sym = symbol_find(token.str);
 		if (sym) {
 			token.id = sym->token_id;
 			switch (token.id) {
@@ -261,34 +309,7 @@ static struct token yylex()
 
 		return token;
 	} else if (isdigit(ch)) {
-		/* Determine base and valid character set */
-		if (ch == '0') {
-			*p++ = ch;
-			ch = input();
-			if (ch == 'x' || ch == 'X') {
-				*p++ = ch;
-				ch = input();
-				isvalid = isxdigit;
-				base = 16;
-			} else {
-				isvalid = isodigit;
-				base = 8;
-			}
-		} else {
-			isvalid = isdigit;
-			base = 10;
-		}
-
-		*p++ = ch;
-		while ((ch = input()) && isvalid(ch)) {
-			if (p - buf == sizeof(buf)) {
-				buf[TOKEN_BUF_MIN] = '\0';
-				yyerror("number too long: \"%s...\"", buf);
-			}
-			*p++ = ch;
-		}
-		unput(ch);
-		*p = '\0';
+		base = qmi_number_parse(buf, sizeof(buf), ch);
 
 		errno = 0;
 		num = strtoull(buf, NULL, base);
