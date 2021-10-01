@@ -131,8 +131,6 @@ static struct token yylex()
 	int base;
 	int ch;
 
-	list_for_each_entry(sym, &symbols, node);
-
 	while ((ch = input()) && isspace(ch))
 		;
 
