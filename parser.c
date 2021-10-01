@@ -58,13 +58,13 @@ static void yyerror(const char *fmt, ...)
 	exit(1);
 }
 
-static int input()
+static char input()
 {
 	static char input_buf[128];
 	static unsigned input_pos;
 	static unsigned input_len;
 	int ret;
-	int ch;
+	char ch;
 
 	if (scratch_pos) {
 		ch = scratch_buf[--scratch_pos];
@@ -148,7 +148,7 @@ static struct token yylex()
 	char buf[128];
 	char *p = buf;
 	int base;
-	int ch;
+	char ch;
 
 	while ((ch = input()) && isspace(ch))
 		;
