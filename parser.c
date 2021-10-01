@@ -238,9 +238,7 @@ static const char *parse_package()
 {
 	struct token tok;
 
-	if (!token_accept(TOK_ID, &tok))
-		yyerror("expected identifier");
-
+	token_expect(TOK_ID, &tok);
 	token_expect(';', NULL);
 	return tok.str;
 }
