@@ -41,8 +41,6 @@ struct token {
 	struct qmi_struct *qmi_struct;
 };
 
-static char lookahead;
-
 static int yyline = 1;
 
 static void yyerror(const char *fmt, ...)
@@ -62,51 +60,28 @@ static void yyerror(const char *fmt, ...)
 
 static char input()
 {
-	static char input_buf[128];
-	static unsigned input_pos;
-	static unsigned input_len;
-	int ret;
-	char ch;
+	int ch;
 
-	if (lookahead) {
-		ch = lookahead;
-		lookahead = 0;
-		goto out;
-	}
-
-	if (input_pos < input_len) {
-		ch = input_buf[input_pos++];
-		goto out;
-	}
-
-	ret = read(0, input_buf, sizeof(input_buf));
-	if (ret <= 0) {
-		if (ret < 0)
-			yyerror("read error: %s", strerror(errno));
+	ch = fgetc(stdin);
+	if (ch < 0)
 		return 0;	/* End of input */
-	}
 
-	input_pos = 0;
-	input_len = ret;
-
-	ch = input_buf[input_pos++];
-	if (!isascii(ch))
+	if (ch == '\n')
+		yyline++;
+	else if (!isascii(ch))
 		yyerror("invalid non-ASCII character");
 	else if (!ch)
 		yyerror("invalid NUL character");
-out:
-	if (ch == '\n')
-		yyline++;
-	return ch;
+
+	return (char)ch;
 }
 
 static void unput(int ch)
 {
-	assert(!lookahead);
-	lookahead = ch;
-
 	if (ch == '\n')
 		yyline--;
+	if (ungetc(ch, stdin) != ch)
+		yyerror("ungetc error");
 }
 
 struct symbol {
