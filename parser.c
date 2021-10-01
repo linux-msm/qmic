@@ -217,7 +217,7 @@ static struct token yylex()
 		do {
 			*p++ = ch;
 			ch = input();
-		} while (isdigit(ch) || (p - buf == 1 && ch == 'x'));
+		} while (isxdigit(ch) || (p - buf == 1 && ch == 'x'));
 		unput(ch);
 		*p = '\0';
 

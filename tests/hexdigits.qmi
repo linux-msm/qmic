@@ -1,0 +1,15 @@
+package test;
+
+struct qmi_result {
+	u16 result;
+	u16 error;
+};
+
+request test_request {
+	# 0x1a should be interpreted as decimal 26 (not a parse error)
+	optional u16 weird = 0x1a;
+} = 0x23;
+
+response test_response {
+	required qmi_result r = 2;
+} = 043;
