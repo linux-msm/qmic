@@ -218,14 +218,14 @@ static struct token yylex()
 		;
 
 	if (isalpha(ch)) {
-		do {
+		*p++ = ch;
+		while ((ch = input()) && (isalnum(ch) || ch == '_')) {
 			if (p - buf == sizeof(buf)) {
 				buf[TOKEN_BUF_MIN] = '\0';
 				yyerror("token too long: \"%s...\"", buf);
 			}
 			*p++ = ch;
-			ch = input();
-		} while (isalnum(ch) || ch == '_');
+		}
 		unput(ch);
 		*p = '\0';
 
@@ -275,14 +275,14 @@ static struct token yylex()
 			base = 10;
 		}
 
-		do {
+		*p++ = ch;
+		while ((ch = input()) && isvalid(ch)) {
 			if (p - buf == sizeof(buf)) {
 				buf[TOKEN_BUF_MIN] = '\0';
 				yyerror("number too long: \"%s...\"", buf);
 			}
 			*p++ = ch;
-			ch = input();
-		} while (isvalid(ch));
+		}
 		unput(ch);
 		*p = '\0';
 
