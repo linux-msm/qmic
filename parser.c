@@ -119,10 +119,39 @@ struct symbol {
 
 static struct list_head symbols = LIST_INIT(symbols);
 
+static bool symbol_valid(const char *name)
+{
+	const char *p = name;
+	struct symbol *sym;
+	char ch;
+
+	/* Symbol name must start with an alphabetic character */
+	if (!p || !isalpha(*p++))
+		return false;
+
+	/* Remainder of the name is alphanumeric or underscore */
+	while ((ch = *p++))
+		if (!(isalnum(ch) || ch == '_'))
+			return false;
+
+	/* Symbol name must fit in the token buffer */
+	if (p - name > TOKEN_BUF_SIZE)
+		return 0;
+
+	/* Finally, symbol names must be unique */
+	list_for_each_entry(sym, &symbols, node)
+		if (!strcmp(name, sym->name))
+			return false;
+
+	return true;
+}
+
 static void symbol_add(const char *name, enum token_id token_id, ...)
 {
 	struct symbol *sym;
 	va_list ap;
+
+	assert(symbol_valid(name));
 
 	va_start(ap, token_id);
 
