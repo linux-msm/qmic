@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <err.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -42,6 +43,21 @@ static unsigned scratch_pos;
 
 static int yyline = 1;
 
+static void yyerror(const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+
+	printf("parse error on line %u:\n\t", yyline);
+	vprintf(fmt, ap);
+	printf("\n");
+
+	va_end(ap);
+
+	exit(1);
+}
+
 static int input()
 {
 	static char input_buf[128];
@@ -61,8 +77,11 @@ static int input()
 	}
 
 	ret = read(0, input_buf, sizeof(input_buf));
-	if (ret <= 0)
-		return ret;
+	if (ret <= 0) {
+		if (ret < 0)
+			yyerror("read error: %s", strerror(errno));
+		return 0;	/* End of input */
+	}
 
 	input_pos = 0;
 	input_len = ret;
@@ -180,21 +199,6 @@ static struct token yylex()
 }
 
 static struct token curr_token;
-
-static void yyerror(const char *fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-
-	printf("parse error on line %u:\n\t", yyline);
-	vprintf(fmt, ap);
-	printf("\n");
-
-	va_end(ap);
-
-	exit(1);
-}
 
 static void token_init(void)
 {
