@@ -129,6 +129,30 @@ static struct symbol *symbol_find(const char *name)
 	return NULL;
 }
 
+static const char *token_name(enum token_id token_id)
+{
+	struct symbol *sym;
+
+	switch (token_id) {
+	case TOK_ID:
+		return "identifier";
+	case TOK_MESSAGE:
+		return "(message)";
+	case TOK_NUM:
+		return "(number)";
+	case TOK_EOF:
+		return "(EOF)";
+	default:
+		break;
+	}
+
+	list_for_each_entry(sym, &symbols, node)
+		if (token_id == sym->token_id)
+			return sym->name;
+
+	return NULL;
+}
+
 static bool symbol_valid(const char *name)
 {
 	const char *p = name;
@@ -355,30 +379,16 @@ static bool token_accept(enum token_id token_id, struct token *tok)
 
 static void token_expect(enum token_id token_id, struct token *tok)
 {
-	if (!token_accept(token_id, tok)) {
-		switch (token_id) {
-		case TOK_CONST:
-			yyerror("expected const");
-		case TOK_ID:
-			yyerror("expected identifier");
-		case TOK_MESSAGE:
-			yyerror("expected message");
-		case TOK_NUM:
-			yyerror("expected num");
-		case TOK_PACKAGE:
-			yyerror("expected package");
-		case TOK_STRUCT:
-			yyerror("expected struct");
-		case TOK_TYPE:
-			yyerror("expected type");
-		case TOK_REQUIRED:
-			yyerror("expected required");
-		case TOK_OPTIONAL:
-			yyerror("expected optional");
-		default:
-			yyerror("expected '%c'", token_id);
-		}
-	}
+	const char *want;
+
+	if (token_accept(token_id, tok))
+		return;
+
+	want = token_name(token_id);
+	if (want)
+		yyerror("expected %s", want);
+	else
+		yyerror("expected '%c'", token_id);
 }
 
 static void qmi_package_parse(void)
