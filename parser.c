@@ -27,6 +27,9 @@
 		__p;							\
 	 })
 
+#define TOKEN_BUF_SIZE		128	/* TOKEN_BUF_MIN or more */
+#define TOKEN_BUF_MIN		24	/* Enough for a 64-bit octal number */
+
 const char *qmi_package;
 
 struct list_head qmi_consts = LIST_INIT(qmi_consts);
@@ -177,7 +180,7 @@ static struct token yylex()
 	struct token token = {};
 	unsigned long long num;
 	int (*isvalid)(int);
-	char buf[128];
+	char buf[TOKEN_BUF_SIZE];
 	char *p = buf;
 	int base;
 	char ch;
@@ -187,6 +190,10 @@ static struct token yylex()
 
 	if (isalpha(ch)) {
 		do {
+			if (p - buf == sizeof(buf)) {
+				buf[TOKEN_BUF_MIN] = '\0';
+				yyerror("token too long: \"%s...\"", buf);
+			}
 			*p++ = ch;
 			ch = input();
 		} while (isalnum(ch) || ch == '_');
@@ -240,6 +247,10 @@ static struct token yylex()
 		}
 
 		do {
+			if (p - buf == sizeof(buf)) {
+				buf[TOKEN_BUF_MIN] = '\0';
+				yyerror("number too long: \"%s...\"", buf);
+			}
 			*p++ = ch;
 			ch = input();
 		} while (isvalid(ch));
