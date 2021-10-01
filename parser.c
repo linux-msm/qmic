@@ -49,9 +49,9 @@ static void yyerror(const char *fmt, ...)
 
 	va_start(ap, fmt);
 
-	printf("parse error on line %u:\n\t", yyline);
-	vprintf(fmt, ap);
-	printf("\n");
+	fprintf(stderr, "parse error on line %u:\n\t", yyline);
+	vfprintf(stderr, fmt, ap);
+	fprintf(stderr, "\n");
 
 	va_end(ap);
 
