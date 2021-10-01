@@ -119,10 +119,19 @@ struct symbol {
 
 static struct list_head symbols = LIST_INIT(symbols);
 
+static struct symbol *symbol_find(const char *name)
+{
+	struct symbol *sym;
+
+	list_for_each_entry(sym, &symbols, node)
+		if (!strcmp(name, sym->name))
+			return sym;
+	return NULL;
+}
+
 static bool symbol_valid(const char *name)
 {
 	const char *p = name;
-	struct symbol *sym;
 	char ch;
 
 	/* Symbol name must start with an alphabetic character */
@@ -139,9 +148,8 @@ static bool symbol_valid(const char *name)
 		return 0;
 
 	/* Finally, symbol names must be unique */
-	list_for_each_entry(sym, &symbols, node)
-		if (!strcmp(name, sym->name))
-			return false;
+	if (symbol_find(name))
+		return false;
 
 	return true;
 }
@@ -233,10 +241,8 @@ static struct token yylex()
 		if (!token.str)
 			yyerror("strdup() failed in %s(), line %d\n",
 				__func__, __LINE__);
-		list_for_each_entry(sym, &symbols, node) {
-			if (strcmp(buf, sym->name))
-				continue;
-
+		sym = symbol_find(token.str);
+		if (sym) {
 			token.id = sym->token_id;
 			switch (token.id) {
 			case TOK_MESSAGE:
@@ -247,13 +253,11 @@ static struct token yylex()
 				token.qmi_struct = sym->qmi_struct;
 				break;
 			default:
-				break;
+				break;	/* Others just have id and string */
 			}
-
-			return token;
+		} else {
+			token.id = TOK_ID;	/* Just an identifier */
 		}
-
-		token.id = TOK_ID;
 
 		return token;
 	} else if (isdigit(ch)) {
