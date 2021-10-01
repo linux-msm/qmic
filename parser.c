@@ -41,8 +41,7 @@ struct token {
 	struct qmi_struct *qmi_struct;
 };
 
-static char scratch_buf[128];
-static unsigned scratch_pos;
+static char lookahead;
 
 static int yyline = 1;
 
@@ -69,8 +68,9 @@ static char input()
 	int ret;
 	char ch;
 
-	if (scratch_pos) {
-		ch = scratch_buf[--scratch_pos];
+	if (lookahead) {
+		ch = lookahead;
+		lookahead = 0;
 		goto out;
 	}
 
@@ -102,8 +102,8 @@ out:
 
 static void unput(int ch)
 {
-	assert(scratch_pos < 128);
-	scratch_buf[scratch_pos++] = ch;
+	assert(!lookahead);
+	lookahead = ch;
 
 	if (ch == '\n')
 		yyline--;
