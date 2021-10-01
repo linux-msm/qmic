@@ -29,6 +29,7 @@ enum {
 	TOK_TYPE,
 	TOK_REQUIRED,
 	TOK_OPTIONAL,
+	TOK_EOF,
 };
 
 struct token {
@@ -89,6 +90,8 @@ static char input()
 	ch = input_buf[input_pos++];
 	if (!isascii(ch))
 		yyerror("invalid non-ASCII character");
+	else if (!ch)
+		yyerror("invalid NUL character");
 out:
 	if (ch == '\n')
 		yyline++;
@@ -193,6 +196,10 @@ static struct token yylex()
 
 		token.id = TOK_NUM;
 		token.num = strtol(buf, NULL, base);
+		return token;
+	} else if (!ch) {
+		token.id = TOK_EOF;
+
 		return token;
 	}
 
@@ -416,7 +423,7 @@ void qmi_parse(void)
 	symbol_add("u64", TOK_TYPE, TYPE_U64);
 
 	token_init();
-	while (!token_accept(0, NULL)) {
+	while (!token_accept(TOK_EOF, NULL)) {
 		if (token_accept(TOK_PACKAGE, NULL)) {
 			qmi_package = parse_package();
 		} else if (token_accept(TOK_CONST, NULL)) {
