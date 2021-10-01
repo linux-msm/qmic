@@ -329,6 +329,7 @@ static void qmi_package_parse(void)
 
 static void qmi_const_parse()
 {
+	struct qmi_const *qcm;
 	struct qmi_const *qc;
 	struct token num_tok;
 	struct token id_tok;
@@ -337,6 +338,10 @@ static void qmi_const_parse()
 	token_expect('=', NULL);
 	token_expect(TOK_NUM, &num_tok);
 	token_expect(';', NULL);
+
+	list_for_each_entry(qcm, &qmi_consts, node)
+		if (!strcmp(qcm->name, id_tok.str))
+			yyerror("duplicate constant \"%s\"", qcm->name);
 
 	qc = memalloc(sizeof(struct qmi_const));
 	qc->name = id_tok.str;
@@ -395,6 +400,15 @@ static void qmi_message_parse(enum message_type message_type)
 		token_expect(TOK_NUM, &num_tok);
 		token_expect(';', NULL);
 
+		list_for_each_entry(qmm, &qm->members, node) {
+			if (!strcmp(qmm->name, id_tok.str))
+				yyerror("duplicate message member \"%s\"",
+					qmm->name);
+			if (qmm->id == type_tok.num)
+				yyerror("duplicate message member number %u",
+					qmm->id);
+		}
+
 		qmm = memalloc(sizeof(struct qmi_message_member));
 		qmm->name = id_tok.str;
 		qmm->type = type_tok.num;
@@ -438,6 +452,11 @@ static void qmi_struct_parse(void)
 	while (token_accept(TOK_TYPE, &type_tok)) {
 		token_expect(TOK_ID, &id_tok);
 		token_expect(';', NULL);
+
+		list_for_each_entry(qsm, &qs->members, node)
+			if (!strcmp(qsm->name, id_tok.str))
+				yyerror("duplicate struct member \"%s\"",
+					qsm->name);
 
 		qsm = memalloc(sizeof(struct qmi_struct_member));
 		qsm->name = id_tok.str;
