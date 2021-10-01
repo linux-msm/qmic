@@ -325,8 +325,8 @@ static void qmi_message_parse(enum message_type message_type)
 	struct token type_tok;
 	struct token num_tok;
 	struct token id_tok;
-	unsigned int array_size;
-	bool array_fixed = false;
+	unsigned array_size;
+	bool array_fixed;
 	bool required;
 
 	token_expect(TOK_ID, &msg_id_tok);
@@ -352,14 +352,15 @@ static void qmi_message_parse(enum message_type message_type)
 			token_expect(TOK_NUM, &num_tok);
 			array_size = num_tok.num;
 			token_expect(']', NULL);
-
 			array_fixed = true;
-		} else if(token_accept('(', NULL)) {
+		} else if (token_accept('(', NULL)) {
 			token_expect(TOK_NUM, &num_tok);
 			array_size = num_tok.num;
 			token_expect(')', NULL);
+			array_fixed = false;
 		} else {
 			array_size = 0;
+			array_fixed = false;
 		}
 
 		token_expect('=', NULL);

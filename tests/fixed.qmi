@@ -1,0 +1,17 @@
+package test;
+
+struct qmi_result {
+	u16 result;
+	u16 error;
+};
+
+request test_request {
+	optional u8 variable(5) = 0x1;
+	optional u16 fixed[5] = 0x2;
+	# The next field should have array_type VAR_LEN_ARRAY
+	optional u32 not_fixed(5) = 0x3;
+} = 0x23;
+
+response test_response {
+	required qmi_result r = 2;
+} = 043;
