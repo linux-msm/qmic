@@ -48,7 +48,7 @@ enum token_id {
 };
 
 struct token {
-	int id;
+	enum token_id id;
 	char *str;
 	unsigned num;
 	struct qmi_struct *qmi_struct;
@@ -99,7 +99,7 @@ static void unput(int ch)
 }
 
 struct symbol {
-	int token;
+	enum token_id token_id;
 	const char *name;
 
 	int type;
@@ -110,18 +110,18 @@ struct symbol {
 
 static struct list_head symbols = LIST_INIT(symbols);
 
-static void symbol_add(const char *name, int token, ...)
+static void symbol_add(const char *name, enum token_id token_id, ...)
 {
 	struct symbol *sym;
 	va_list ap;
 
-	va_start(ap, token);
+	va_start(ap, token_id);
 
 	sym = memalloc(sizeof(struct symbol));
-	sym->token = token;
+	sym->token_id = token_id;
 	sym->name = name;
 
-	switch (token) {
+	switch (token_id) {
 	case TOK_MESSAGE:
 		sym->type = va_arg(ap, int);
 		break;
@@ -130,6 +130,8 @@ static void symbol_add(const char *name, int token, ...)
 		if (sym->type == TYPE_STRUCT)
 			sym->qmi_struct = va_arg(ap, struct qmi_struct *);
 		break;
+	default:
+		break;	/* Most tokens are standalone */
 	}
 
 	list_add(&symbols, &sym->node);
@@ -163,7 +165,7 @@ static struct token yylex()
 				__func__, __LINE__);
 		list_for_each_entry(sym, &symbols, node) {
 			if (strcmp(buf, sym->name) == 0) {
-				token.id = sym->token;
+				token.id = sym->token_id;
 				token.num = sym->type;
 				token.qmi_struct = sym->qmi_struct;
 				return token;
@@ -208,9 +210,9 @@ static void token_init(void)
 	curr_token = yylex();
 }
 
-static int token_accept(int id, struct token *tok)
+static int token_accept(enum token_id token_id, struct token *tok)
 {
-	if (curr_token.id == id) {
+	if (curr_token.id == token_id) {
 		if (tok)
 			*tok = curr_token;
 		else if (curr_token.str)
@@ -223,10 +225,10 @@ static int token_accept(int id, struct token *tok)
 	}
 }
 
-static void token_expect(int id, struct token *tok)
+static void token_expect(enum token_id token_id, struct token *tok)
 {
-	if (!token_accept(id, tok)) {
-		switch (id) {
+	if (!token_accept(token_id, tok)) {
+		switch (token_id) {
 		case TOK_CONST:
 			yyerror("expected const");
 		case TOK_ID:
@@ -246,7 +248,7 @@ static void token_expect(int id, struct token *tok)
 		case TOK_OPTIONAL:
 			yyerror("expected optional");
 		default:
-			yyerror("expected '%c'", id);
+			yyerror("expected '%c'", token_id);
 		}
 	}
 }
