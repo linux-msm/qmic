@@ -7,7 +7,7 @@
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
 
-enum {
+enum symbol_type {
 	TYPE_U8,
 	TYPE_U16,
 	TYPE_U32,

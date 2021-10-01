@@ -102,8 +102,14 @@ struct symbol {
 	enum token_id token_id;
 	const char *name;
 
-	int type;
-	struct qmi_struct *qmi_struct;
+	union {
+		enum message_type message_type;		/* TOK_MESSAGE */
+		struct {				/* TOK_TYPE */
+			enum symbol_type symbol_type;
+			/* TYPE_STRUCT also has a struct pointer */
+			struct qmi_struct *qmi_struct;
+		};
+	};
 
 	struct list_head node;
 };
@@ -123,11 +129,11 @@ static void symbol_add(const char *name, enum token_id token_id, ...)
 
 	switch (token_id) {
 	case TOK_MESSAGE:
-		sym->type = va_arg(ap, int);
+		sym->message_type = va_arg(ap, enum message_type);
 		break;
 	case TOK_TYPE:
-		sym->type = va_arg(ap, int);
-		if (sym->type == TYPE_STRUCT)
+		sym->symbol_type = va_arg(ap, enum symbol_type);
+		if (sym->symbol_type == TYPE_STRUCT)
 			sym->qmi_struct = va_arg(ap, struct qmi_struct *);
 		break;
 	default:
@@ -164,12 +170,23 @@ static struct token yylex()
 			yyerror("strdup() failed in %s(), line %d\n",
 				__func__, __LINE__);
 		list_for_each_entry(sym, &symbols, node) {
-			if (strcmp(buf, sym->name) == 0) {
-				token.id = sym->token_id;
-				token.num = sym->type;
+			if (strcmp(buf, sym->name))
+				continue;
+
+			token.id = sym->token_id;
+			switch (token.id) {
+			case TOK_MESSAGE:
+				token.num = sym->message_type;
+				break;
+			case TOK_TYPE:
+				token.num = sym->symbol_type;
 				token.qmi_struct = sym->qmi_struct;
-				return token;
+				break;
+			default:
+				break;
 			}
+
+			return token;
 		}
 
 		token.id = TOK_ID;
