@@ -42,6 +42,7 @@ enum token_id {
 	TOK_ID,
 	TOK_MESSAGE,
 	TOK_NUM,
+	TOK_VALUE,
 	TOK_PACKAGE,
 	TOK_STRUCT,
 	TOK_TYPE,
@@ -112,6 +113,7 @@ struct symbol {
 			/* TYPE_STRUCT also has a struct pointer */
 			struct qmi_struct *qmi_struct;
 		};
+		unsigned long long value;		/* TOK_VALUE */
 	};
 
 	struct list_head node;
@@ -199,6 +201,9 @@ static void symbol_add(const char *name, enum token_id token_id, ...)
 		sym->symbol_type = va_arg(ap, enum symbol_type);
 		if (sym->symbol_type == TYPE_STRUCT)
 			sym->qmi_struct = va_arg(ap, struct qmi_struct *);
+		break;
+	case TOK_VALUE:
+		sym->value = va_arg(ap, unsigned long long);
 		break;
 	default:
 		break;	/* Most tokens are standalone */
@@ -324,6 +329,11 @@ static struct token yylex()
 				token.num = sym->symbol_type;
 				token.qmi_struct = sym->qmi_struct;
 				break;
+			case TOK_VALUE:
+				/* Override token id; use numeric value */
+				token.id = TOK_NUM;
+				token.num = sym->value;
+				break;
 			default:
 				break;	/* Others just have id and string */
 			}
@@ -424,6 +434,8 @@ static void qmi_const_parse()
 	qc->value = num_tok.num;
 
 	list_add(&qmi_consts, &qc->node);
+
+	symbol_add(qc->name, TOK_VALUE, qc->value);
 }
 
 static void qmi_message_parse(enum message_type message_type)
