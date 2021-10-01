@@ -3,6 +3,7 @@
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,8 +20,9 @@ struct list_head qmi_consts = LIST_INIT(qmi_consts);
 struct list_head qmi_messages = LIST_INIT(qmi_messages);
 struct list_head qmi_structs = LIST_INIT(qmi_structs);
 
-enum {
-	TOK_CONST = 256,
+enum token_id {
+	/* Also any non-NUL (7-bit) ASCII character */
+	TOK_CONST = CHAR_MAX + 1,
 	TOK_ID,
 	TOK_MESSAGE,
 	TOK_NUM,
