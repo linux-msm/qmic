@@ -1,0 +1,28 @@
+# This is a comment at the beginning of the file
+#
+#############
+package test;
+#############
+
+const TEST_REQUEST_RESPONSE = 35;	# Skip me!!! # Skip me!!!
+
+struct qmi_result {
+	u16 result;
+  # No limit on
+	u16#     where     comments
+				# can go
+error;
+};
+
+request test_request {
+	required u8 test_number = 0x12;
+} = 0x23;	# Skip me!!! # Skip me!!!
+
+response test_response {
+	required qmi_result r = 2;
+} = 043;
+
+indication test_indication {
+	optional u64 value = 0x99;
+} = 0x7;
+######## End the file with a comment

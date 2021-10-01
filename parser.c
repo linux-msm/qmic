@@ -145,6 +145,26 @@ static void symbol_add(const char *name, enum token_id token_id, ...)
 	va_end(ap);
 }
 
+/* Skip over white space and comments (which start with '#', end with '\n') */
+static bool skip(char ch)
+{
+	static bool in_comment = false;
+
+	if (in_comment) {
+		if (ch == '\n')
+			in_comment = false;
+		return true;
+	}
+
+	if (isspace(ch))
+		return true;
+
+	if (ch == '#')
+		in_comment = true;
+
+	return in_comment;
+}
+
 static struct token yylex()
 {
 	struct symbol *sym;
@@ -154,7 +174,7 @@ static struct token yylex()
 	int base;
 	char ch;
 
-	while ((ch = input()) && isspace(ch))
+	while ((ch = input()) && skip(ch))
 		;
 
 	if (isalpha(ch)) {
