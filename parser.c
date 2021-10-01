@@ -87,6 +87,8 @@ static char input()
 	input_len = ret;
 
 	ch = input_buf[input_pos++];
+	if (!isascii(ch))
+		yyerror("invalid non-ASCII character");
 out:
 	if (ch == '\n')
 		yyline++;
