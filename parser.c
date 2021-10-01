@@ -325,6 +325,8 @@ static void qmi_message_parse(enum message_type message_type)
 		qmm = calloc(1, sizeof(struct qmi_message_member));
 		qmm->name = id_tok.str;
 		qmm->type = type_tok.num;
+		if (type_tok.str)
+			free(type_tok.str);
 		qmm->qmi_struct = type_tok.qmi_struct;
 		qmm->id = num_tok.num;
 		qmm->required = required;
@@ -367,6 +369,8 @@ static void qmi_struct_parse(void)
 		qsm = malloc(sizeof(struct qmi_struct_member));
 		qsm->name = id_tok.str;
 		qsm->type = type_tok.num;
+		if (type_tok.str)
+			free(type_tok.str);
 
 		list_add(&qs->members, &qsm->node);
 	}
