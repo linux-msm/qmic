@@ -492,7 +492,7 @@ static void qmi_message_parse(enum message_type message_type)
 			if (!strcmp(qmm->name, id_tok.str))
 				yyerror("duplicate message member \"%s\"",
 					qmm->name);
-			if (qmm->id == type_tok.num)
+			if (qmm->id == num_tok.num)
 				yyerror("duplicate message member number %u",
 					qmm->id);
 		}
