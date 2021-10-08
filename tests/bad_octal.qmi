@@ -7,7 +7,7 @@ struct qmi_result {
 
 request test_request {
 	# Note that '8' is not a valid octal digit
-	optional test_struct foo = 028;
+	optional u32 foo = 028;
 } = 0x23;
 
 response test_response {

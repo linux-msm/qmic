@@ -257,7 +257,7 @@ static struct symbol *qmi_identifier_parse(char *buf, size_t size, char ch)
 /* Used for parsing octal numbers */
 static int isodigit(int c)
 {
-	return isdigit(c) && c < '9';
+	return isdigit(c) && c < '8';
 }
 
 /* Extract a number from input into the given buffer; return base */
