@@ -3,7 +3,7 @@ package test;
 # As a 32 bit signed number, this would be negative
 const TEST_NUMBER = 0x87654321;
 # This value requires more than 32 bits to represent
-const TEST_NUMBER = 0x123456789;
+const TEST_NUMBER2 = 0x123456789;
 
 struct qmi_result {
 	u16 result;
