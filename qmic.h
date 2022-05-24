@@ -49,6 +49,7 @@ struct qmi_message {
 	enum message_type type;
 	const char *name;
 	unsigned msg_id;
+	bool is_ctl;
 
 	struct list_head node;
 

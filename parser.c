@@ -48,6 +48,7 @@ enum token_id {
 	TOK_TYPE,
 	TOK_REQUIRED,
 	TOK_OPTIONAL,
+	TOK_CTL,
 	TOK_EOF,
 };
 
@@ -449,12 +450,15 @@ static void qmi_message_parse(enum message_type message_type)
 	unsigned array_size;
 	bool array_fixed;
 	bool required;
+	bool is_ctl = token_accept(TOK_CTL, NULL);
 
 	token_expect(TOK_ID, &msg_id_tok);
 	token_expect('{', NULL);
 
 	qm = memalloc(sizeof(struct qmi_message));
 	qm->name = msg_id_tok.str;
+	/* CTL messages have a slightly different format */
+	qm->is_ctl = is_ctl;
 	qm->type = message_type;
 	list_init(&qm->members);
 
@@ -572,7 +576,7 @@ void qmi_parse(void)
 	/* STRUCT ID<string> '{' ... '}' ';' */
 		/* TYPE<type*> ID<string> ';' */
 	/* MESSAGE ID<string> '{' ... '}' ';' */
-		/* (REQUIRED | OPTIONAL) TYPE<type*> ID<string> '=' NUM<num> ';' */
+		/* (REQUIRED | OPTIONAL) (CTL) TYPE<type*> ID<string> '=' NUM<num> ';' */
 
 	symbol_add("const", TOK_CONST);
 	symbol_add("optional", TOK_OPTIONAL);
@@ -580,6 +584,7 @@ void qmi_parse(void)
 	symbol_add("request", TOK_MESSAGE, MESSAGE_REQUEST);
 	symbol_add("response", TOK_MESSAGE, MESSAGE_RESPONSE);
 	symbol_add("indication", TOK_MESSAGE, MESSAGE_INDICATION);
+	symbol_add("ctl", TOK_CTL);
 	symbol_add("package", TOK_PACKAGE);
 	symbol_add("required", TOK_REQUIRED);
 	symbol_add("struct", TOK_STRUCT);
