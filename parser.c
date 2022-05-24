@@ -263,30 +263,28 @@ static int isodigit(int c)
 /* Extract a number from input into the given buffer; return base */
 static unsigned qmi_number_parse(char *buf, size_t size, char ch)
 {
-	int (*isvalid)(int);
+	int (*isvalid)(int) = isdigit;
 	char *p = buf;
-	unsigned base;
+	unsigned base = 10;
 
-	/* First character is a digit; determine base and valid character set */
+	/* First character is known to be a digit 0-9 */
+	*p++ = ch;
+
+	/* Determine base and valid character set */
 	if (ch == '0') {
-		*p++ = ch;
 		ch = input();
 		if (ch == 'x' || ch == 'X') {
 			*p++ = ch;
 			ch = input();
 			isvalid = isxdigit;
 			base = 16;
-		} else {
+		} else if (isodigit(ch)) {
 			isvalid = isodigit;
 			base = 8;
 		}
-	} else {
-		isvalid = isdigit;
-		base = 10;
+		unput(ch);
 	}
 
-	/* First character is known to be a digit 0-9 */
-	*p++ = ch;
 	while ((ch = input()) && isvalid(ch)) {
 		if (p - buf == size) {
 			buf[TOKEN_BUF_MIN] = '\0';
